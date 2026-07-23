@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [develop]
+
+jobs:
+  lint-test-build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: ems_user
+          POSTGRES_PASSWORD: changeme
+          POSTGRES_DB: ems_db
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        working-directory: server
+        run: npm ci
+
+      - name: Lint
+        working-directory: server
+        run: npm run lint
+
+      - name: Run migrations
+        working-directory: server
+        run: PGPASSWORD=changeme psql -h localhost -U ems_user -d ems_db -f ../db/init.sql
+
+      - name: Run tests
+        working-directory: server
+        env:
+          DB_HOST: localhost
+          DB_USER: ems_user
+          DB_PASSWORD: changeme
+          DB_NAME: ems_db
+        run: npm test
+
+      - name: Build Docker image
+        working-directory: server
+        run: docker build -t ems-api:ci .
