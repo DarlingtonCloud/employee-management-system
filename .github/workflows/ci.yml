@@ -9,13 +9,6 @@ on:
 jobs:
   lint-test-build:
     runs-on: ubuntu-latest
-        feature/employee-crud-api
-
-    env:
-      # Temporary: allow selecting Node 20 if needed (remove once you upgrade to Node 24)
-      ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: 'true'
-
-        main
     services:
       postgres:
         image: postgres:15
@@ -35,11 +28,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-        feature/employee-crud-api
           node-version: '20'
-
-          node-version: '20.x'
-        main
           cache: 'npm'
           cache-dependency-path: server/package-lock.json
 
@@ -47,45 +36,13 @@ jobs:
         working-directory: server
         run: npm ci
 
-        feature/employee-crud-api
-      - name: Debug - check for eslint config
-        working-directory: server
-        run: |
-          pwd
-          ls -la
-          cat eslint.config.js || echo "FILE NOT FOUND"
-
-      - name: Wait for Postgres to be ready
-        working-directory: server
-        run: |
-          for i in {1..30}; do
-            if PGPASSWORD=changeme psql -h localhost -U ems_user -d ems_db -c '\q' 2>/dev/null; then
-              echo "Postgres is ready"
-              break
-            fi
-            echo "Waiting for Postgres... ($i)"
-            sleep 1
-          done
-        main
-
       - name: Lint
         working-directory: server
         run: npm run lint
 
       - name: Run migrations
         working-directory: server
-        feature/employee-crud-api
         run: PGPASSWORD=changeme psql -h localhost -U ems_user -d ems_db -f ../db/init.sql
-
-        env:
-          PGHOST: localhost
-          PGUSER: ems_user
-          PGPASSWORD: changeme
-          PGDATABASE: ems_db
-        run: |
-          # Fail fast on SQL errors
-          psql -v ON_ERROR_STOP=1 -f ../db/init.sql
-         main
 
       - name: Run tests
         working-directory: server
@@ -98,8 +55,4 @@ jobs:
 
       - name: Build Docker image
         working-directory: server
-        feature/employee-crud-api
         run: docker build -t ems-api:ci .
-
-        run: docker build -t ems-api:ci .
-       main
