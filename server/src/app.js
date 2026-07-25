@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 app.use(morgan('combined'));
 
-app.get('/health', (req, res) => res.status(200).json({ status: 'ok', uptime: process.uptime() }));
+app.get('/health', (req, res) => res.status(200).json({ status: 'ok', uptime: process.uptime(), version: '1.0.1' }));
 
 app.use('/api/employees', employeeRoutes);
 
